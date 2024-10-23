@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>¡Aventura Matemática! 🌟</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f9ff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2196F3;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .question-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-size: 1.3em;
+            color: #1565C0;
+            margin-bottom: 20px;
+        }
+        .option {
+            background-color: #E3F2FD;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #BBDEFB;
+        }
+        .option input {
+            margin-right: 10px;
+        }
+        .feedback {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .feedback.correct {
+            background-color: #C8E6C9;
+            color: #2E7D32;
+        }
+        .feedback.incorrect {
+            background-color: #FFCDD2;
+            color: #C62828;
+        }
+        .hint {
+            background-color: #FFF3E0;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 4px solid #FFB74D;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        #score {
+            text-align: center;
+            font-size: 1.2em;
+            color: #1565C0;
+            margin: 20px 0;
+        }
+        #progress {
+            width: 100%;
+            height: 20px;
+            background-color: #E0E0E0;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        #progress-bar {
+            height: 100%;
+            background-color: #2196F3;
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        /* Estilos para la pantalla de bienvenida */
+        .welcome-screen {
+            text-align: center;
+            padding: 50px;
+        }
+        .welcome-screen h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        .welcome-screen p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        .welcome-screen button {
+            background-color: #2196F3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        .welcome-screen button:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div id="welcome-screen" class="welcome-screen">
+        <h1>¡Bienvenido a la Aventura Matemática! 🌟</h1>
+        <p>Pon a prueba tus conocimientos en suma, resta, multiplicación, división, potenciación y radicación de números racionales.</p>
+        <button onclick="startGame()">Jugar Ahora</button>
+    </div>
+
+    <div id="game-container" class="container" style="display: none;">
+        <h1>¡Aventura Matemática! 🌟</h1>
+        <div id="progress">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="score">Puntuación: <span id="current-score">0</span>/<span id="total-questions"></span></div>
+        
+        <div id="question-container" class="question-card">
+            <div id="question" class="question-text"></div>
+            <div id="options"></div>
+            <button onclick="checkAnswer()">Comprobar Respuesta</button>
+            <div id="feedback"></div>
+        </div>
+
+        <div id="final-message" style="display: none; text-align: center;">
+            <h2>¡Felicitaciones! 🎉</h2>
+            <p id="final-score"></p>
+            <button onclick="restartGame()">Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+    {
+        question: "¿Cuál es el resultado de \\( \\frac{1}{2} + \\frac{1}{3} \\)?",
+        options: [
+            "\\( \\frac{2}{5} \\)",
+            "\\( \\frac{5}{6} \\)",
+            "\\( \\frac{1}{5} \\)",
+            "\\( \\frac{2}{6} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Para sumar fracciones, deben tener el mismo denominador. Encuentra un denominador común 🧮",
+            "El mínimo común múltiplo de 2 y 3 es 6. Convierte las fracciones a sextos 📝",
+            "Convierte \\( \\frac{1}{2} = \\frac{3}{6} \\) y \\( \\frac{1}{3} = \\frac{2}{6} \\) ✨",
+            "Ahora suma los numeradores: 3 + 2 = 5, entonces la respuesta es \\( \\frac{5}{6} \\) 🎯"
+        ]
+    },
+    {
+        question: "Calcula: \\( \\frac{5}{8} - \\frac{1}{4} \\)",
+        options: [
+            "\\( \\frac{1}{2} \\)",
+            "\\( \\frac{3}{8} \\)",
+            "\\( \\frac{7}{8} \\)",
+            "\\( \\frac{5}{4} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Encuentra un denominador común para las fracciones 🧮",
+            "El mínimo común múltiplo de 8 y 4 es 8. Convierte \\( \\frac{1}{4} = \\frac{2}{8} \\) 📝",
+            "Ahora resta los numeradores: 5 - 2 = 3 ✨",
+            "La respuesta es \\( \\frac{3}{8} \\) 🎯"
+        ]
+    },
+    {
+        question: "Multiplica: \\( \\frac{3}{5} \\times \\frac{2}{7} \\)",
+        options: [
+            "\\( \\frac{6}{35} \\)",
+            "\\( \\frac{5}{10} \\)",
+            "\\( \\frac{3}{7} \\)",
+            "\\( \\frac{5}{7} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Para multiplicar fracciones, multiplica numeradores y denominadores entre sí 📝",
+            "Multiplica los numeradores: 3 × 2 = 6 ✨",
+            "Multiplica los denominadores: 5 × 7 = 35 🔢",
+            "La respuesta es \\( \\frac{6}{35} \\) 🎯"
+        ]
+    },
+    {
+        question: "Divide: \\( \\frac{4}{9} ÷ \\frac{2}{3} \\)",
+        options: [
+            "\\( \\frac{8}{27} \\)",
+            "\\( \\frac{6}{9} \\)",
+            "\\( \\frac{2}{3} \\)",
+            "\\( \\frac{2}{9} \\)"
+        ],
+        correctAnswer: 2,
+        hints: [
+            "Para dividir fracciones, multiplica la primera fracción por el recíproco de la segunda 📝",
+            "El recíproco de \\( \\frac{2}{3} \\) es \\( \\frac{3}{2} \\) ✨",
+            "Multiplica: \\( \\frac{4}{9} \\times \\frac{3}{2} = \\frac{12}{18} \\) 🔢",
+            "Simplifica \\( \\frac{12}{18} = \\frac{2}{3} \\) 🎯"
+        ]
+    },
+    {
+        question: "Simplifica: \\( \\left( \\frac{2}{5} \\right)^2 \\)",
+        options: [
+            "\\( \\frac{4}{25} \\)",
+            "\\( \\frac{2}{10} \\)",
+            "\\( \\frac{8}{25} \\)",
+            "\\( \\frac{4}{5} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Al elevar una fracción al cuadrado, eleva tanto el numerador como el denominador 📝",
+            "Eleva el numerador: 2^2 = 4 ✨",
+            "Eleva el denominador: 5^2 = 25 🔢",
+            "La respuesta es \\( \\frac{4}{25} \\) 🎯"
+        ]
+    },
+    {
+        question: "Calcula la raíz cuadrada de \\( \\frac{9}{16} \\)",
+        options: [
+            "\\( \\frac{3}{4} \\)",
+            "\\( \\frac{9}{4} \\)",
+            "\\( \\frac{4}{3} \\)",
+            "\\( \\frac{3}{5} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "La raíz cuadrada de una fracción es la raíz cuadrada del numerador y del denominador 📝",
+            "Raíz cuadrada de 9 es 3 ✨",
+            "Raíz cuadrada de 16 es 4 🔢",
+            "La respuesta es \\( \\frac{3}{4} \\) 🎯"
+        ]
+    },
+    {
+        question: "¿Qué es \\( \\frac{7}{3} \\) expresado como número mixto?",
+        options: [
+            "2 \\( \\frac{1}{3} \\)",
+            "1 \\( \\frac{4}{3} \\)",
+            "2 \\( \\frac{2}{3} \\)",
+            "1 \\( \\frac{1}{3} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Divide el numerador entre el denominador 🧮",
+            "7 ÷ 3 = 2 con resto 1 ✨",
+            "El número mixto es 2 \\( \\frac{1}{3} \\) 🔢",
+            "Por lo tanto, la respuesta es 2 \\( \\frac{1}{3} \\) 🎯"
+        ]
+    },
+    {
+        question: "Suma: \\( \\frac{5}{6} + \\frac{1}{3} \\)",
+        options: [
+            "\\( \\frac{6}{9} \\)",
+            "\\( \\frac{7}{6} \\)",
+            "\\( \\frac{2}{9} \\)",
+            "\\( \\frac{1}{2} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Encuentra un denominador común 🧮",
+            "El mínimo común múltiplo de 6 y 3 es 6 ✨",
+            "Convierte \\( \\frac{1}{3} = \\frac{2}{6} \\) y suma: 5 + 2 = 7 🔢",
+            "La respuesta es \\( \\frac{7}{6} \\) o 1 \\( \\frac{1}{6} \\) 🎯"
+        ]
+    },
+    {
+        question: "Resta: \\( \\frac{3}{4} - \\frac{1}{2} \\)",
+        options: [
+            "\\( \\frac{1}{4} \\)",
+            "\\( \\frac{2}{4} \\)",
+            "\\( \\frac{1}{2} \\)",
+            "\\( \\frac{3}{2} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Encuentra un denominador común 🧮",
+            "Convierte \\( \\frac{1}{2} = \\frac{2}{4} \\) ✨",
+            "Resta los numeradores: 3 - 2 = 1 🔢",
+            "La respuesta es \\( \\frac{1}{4} \\) 🎯"
+        ]
+    },
+    {
+        question: "Multiplica: \\( \\frac{4}{5} \\times \\frac{10}{3} \\)",
+        options: [
+            "\\( \\frac{40}{15} \\)",
+            "\\( \\frac{8}{15} \\)",
+            "\\( \\frac{14}{8} \\)",
+            "\\( \\frac{2}{3} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Multiplica los numeradores: 4 × 10 = 40 📝",
+            "Multiplica los denominadores: 5 × 3 = 15 ✨",
+            "La fracción es \\( \\frac{40}{15} \\). Simplifica si es posible 🔢",
+            "Simplifica dividiendo entre 5: \\( \\frac{8}{3} \\) o 2 \\( \\frac{2}{3} \\) 🎯"
+        ]
+    },
+    {
+        question: "Divide: \\( \\frac{7}{8} ÷ \\frac{1}{2} \\)",
+        options: [
+            "\\( \\frac{14}{8} \\)",
+            "\\( \\frac{7}{16} \\)",
+            "\\( \\frac{3}{4} \\)",
+            "\\( \\frac{8}{14} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Multiplica por el recíproco de \\( \\frac{1}{2} \\) que es \\( 2 \\) 📝",
+            "Multiplica: \\( \\frac{7}{8} \\times 2 = \\frac{14}{8} \\) ✨",
+            "Simplifica la fracción si es posible 🔢",
+            "La respuesta simplificada es \\( \\frac{7}{4} \\) o 1 \\( \\frac{3}{4} \\) 🎯"
+        ]
+    },
+    {
+        question: "Calcula: \\( \\left( \\frac{3}{4} \\right)^3 \\)",
+        options: [
+            "\\( \\frac{27}{64} \\)",
+            "\\( \\frac{9}{16} \\)",
+            "\\( \\frac{81}{256} \\)",
+            "\\( \\frac{3}{12} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Eleva el numerador: 3^3 = 27 📝",
+            "Eleva el denominador: 4^3 = 64 ✨",
+            "La fracción es \\( \\frac{27}{64} \\) 🔢",
+            "Esa es la respuesta correcta 🎯"
+        ]
+    },
+    {
+        question: "Encuentra la raíz cuadrada de \\( \\frac{16}{25} \\)",
+        options: [
+            "\\( \\frac{4}{5} \\)",
+            "\\( \\frac{16}{5} \\)",
+            "\\( \\frac{5}{4} \\)",
+            "\\( \\frac{8}{10} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Raíz cuadrada de 16 es 4 📝",
+            "Raíz cuadrada de 25 es 5 ✨",
+            "La respuesta es \\( \\frac{4}{5} \\) 🔢",
+            "Esa es la respuesta correcta 🎯"
+        ]
+    },
+    {
+        question: "Simplifica: \\( \\frac{15}{9} \\)",
+        options: [
+            "\\( \\frac{5}{3} \\)",
+            "\\( \\frac{3}{5} \\)",
+            "\\( \\frac{9}{15} \\)",
+            "\\( \\frac{1}{3} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Encuentra el máximo común divisor de 15 y 9 🧮",
+            "El máximo común divisor es 3 ✨",
+            "Divide numerador y denominador entre 3: \\( \\frac{15 ÷ 3}{9 ÷ 3} = \\frac{5}{3} \\) 🔢",
+            "La fracción simplificada es \\( \\frac{5}{3} \\) 🎯"
+        ]
+    },
+    {
+        question: "Calcula: \\( \\frac{2}{7} + \\frac{3}{14} \\)",
+        options: [
+            "\\( \\frac{5}{21} \\)",
+            "\\( \\frac{7}{14} \\)",
+            "\\( \\frac{7}{14} \\)",
+            "\\( \\frac{7}{14} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Encuentra un denominador común 🧮",
+            "El mínimo común múltiplo de 7 y 14 es 14 ✨",
+            "Convierte \\( \\frac{2}{7} = \\frac{4}{14} \\) y suma: 4 + 3 = 7 🔢",
+            "La respuesta es \\( \\frac{7}{14} \\) que se simplifica a \\( \\frac{1}{2} \\) 🎯"
+        ]
+    },
+    {
+        question: "Resta: \\( \\frac{5}{6} - \\frac{1}{9} \\)",
+        options: [
+            "\\( \\frac{4}{6} \\)",
+            "\\( \\frac{13}{18} \\)",
+            "\\( \\frac{4}{9} \\)",
+            "\\( \\frac{5}{9} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Encuentra un denominador común 🧮",
+            "El mínimo común múltiplo de 6 y 9 es 18 ✨",
+            "Convierte \\( \\frac{5}{6} = \\frac{15}{18} \\) y \\( \\frac{1}{9} = \\frac{2}{18} \\) 🔢",
+            "Resta: 15 - 2 = 13, así que la respuesta es \\( \\frac{13}{18} \\) 🎯"
+        ]
+    },
+    {
+        question: "Multiplica: \\( \\frac{7}{8} \\times \\frac{4}{7} \\)",
+        options: [
+            "\\( \\frac{28}{56} \\)",
+            "\\( \\frac{1}{2} \\)",
+            "\\( \\frac{7}{14} \\)",
+            "\\( \\frac{4}{8} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Multiplica los numeradores: 7 × 4 = 28 📝",
+            "Multiplica los denominadores: 8 × 7 = 56 ✨",
+            "La fracción es \\( \\frac{28}{56} \\) que se simplifica a \\( \\frac{1}{2} \\) 🔢",
+            "La respuesta es \\( \\frac{1}{2} \\) 🎯"
+        ]
+    },
+    {
+        question: "Divide: \\( \\frac{9}{10} ÷ \\frac{3}{5} \\)",
+        options: [
+            "\\( \\frac{15}{30} \\)",
+            "\\( \\frac{3}{6} \\)",
+            "\\( \\frac{3}{5} \\)",
+            "\\( \\frac{3}{2} \\)"
+        ],
+        correctAnswer: 3,
+        hints: [
+            "Multiplica por el recíproco de \\( \\frac{3}{5} \\) que es \\( \\frac{5}{3} \\) 📝",
+            "Multiplica: \\( \\frac{9}{10} \\times \\frac{5}{3} = \\frac{45}{30} \\) ✨",
+            "Simplifica: \\( \\frac{45}{30} = \\frac{3}{2} \\) 🔢",
+            "La respuesta es \\( \\frac{3}{2} \\) o 1 \\( \\frac{1}{2} \\) 🎯"
+        ]
+    },
+    {
+        question: "¿Cuál es el resultado de \\( \\left( \\frac{5}{2} \\right)^2 \\)?",
+        options: [
+            "\\( \\frac{25}{4} \\)",
+            "\\( \\frac{10}{4} \\)",
+            "\\( \\frac{25}{2} \\)",
+            "\\( \\frac{5}{4} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Eleva el numerador: 5^2 = 25 📝",
+            "Eleva el denominador: 2^2 = 4 ✨",
+            "La respuesta es \\( \\frac{25}{4} \\) o 6 \\( \\frac{1}{4} \\) 🔢",
+            "Esa es la respuesta correcta 🎯"
+        ]
+    },
+    {
+        question: "Encuentra la raíz cuadrada de \\( \\frac{25}{36} \\)",
+        options: [
+            "\\( \\frac{5}{6} \\)",
+            "\\( \\frac{25}{6} \\)",
+            "\\( \\frac{6}{5} \\)",
+            "\\( \\frac{5}{18} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Raíz cuadrada de 25 es 5 📝",
+            "Raíz cuadrada de 36 es 6 ✨",
+            "La respuesta es \\( \\frac{5}{6} \\) 🔢",
+            "Esa es la respuesta correcta 🎯"
+        ]
+    },
+    {
+        question: "Simplifica: \\( \\frac{18}{24} \\)",
+        options: [
+            "\\( \\frac{3}{4} \\)",
+            "\\( \\frac{6}{8} \\)",
+            "\\( \\frac{9}{12} \\)",
+            "\\( \\frac{4}{3} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Encuentra el máximo común divisor de 18 y 24 🧮",
+            "El máximo común divisor es 6 ✨",
+            "Divide numerador y denominador entre 6: \\( \\frac{18 ÷ 6}{24 ÷ 6} = \\frac{3}{4} \\) 🔢",
+            "La fracción simplificada es \\( \\frac{3}{4} \\) 🎯"
+        ]
+    },
+    {
+        question: "Calcula: \\( \\frac{11}{12} + \\frac{5}{6} \\)",
+        options: [
+            "\\( \\frac{16}{18} \\)",
+            "\\( \\frac{21}{12} \\)",
+            "\\( \\frac{2}{1} \\)",
+            "\\( \\frac{9}{12} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Encuentra un denominador común 🧮",
+            "El mínimo común múltiplo de 12 y 6 es 12 ✨",
+            "Convierte \\( \\frac{5}{6} = \\frac{10}{12} \\) y suma: 11 + 10 = 21 🔢",
+            "La respuesta es \\( \\frac{21}{12} \\) que se simplifica a \\( \\frac{7}{4} \\) o 1 \\( \\frac{3}{4} \\) 🎯"
+        ]
+    },
+    {
+        question: "Resta: \\( \\frac{7}{5} - \\frac{2}{5} \\)",
+        options: [
+            "\\( \\frac{5}{5} \\)",
+            "\\( \\frac{1}{1} \\)",
+            "\\( \\frac{1}{5} \\)",
+            "\\( \\frac{9}{5} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Los denominadores son iguales, resta los numeradores 📝",
+            "Resta: 7 - 2 = 5 ✨",
+            "La fracción es \\( \\frac{5}{5} = 1 \\) 🔢",
+            "La respuesta es 1 🎯"
+        ]
+    },
+    {
+        question: "Multiplica: \\( \\frac{2}{9} \\times \\frac{3}{4} \\)",
+        options: [
+            "\\( \\frac{6}{13} \\)",
+            "\\( \\frac{1}{6} \\)",
+            "\\( \\frac{5}{13} \\)",
+            "\\( \\frac{8}{13} \\)"
+        ],
+        correctAnswer: 1,
+        hints: [
+            "Multiplica los numeradores: 2 × 3 = 6 📝",
+            "Multiplica los denominadores: 9 × 4 = 36 ✨",
+            "La fracción es \\( \\frac{6}{36} \\) que se simplifica a \\( \\frac{1}{6} \\) 🔢",
+            "La respuesta es \\( \\frac{1}{6} \\) 🎯"
+        ]
+    },
+    {
+        question: "Divide: \\( \\frac{5}{6} ÷ \\frac{1}{2} \\)",
+        options: [
+            "\\( \\frac{5}{3} \\)",
+            "\\( \\frac{5}{12} \\)",
+            "\\( \\frac{6}{5} \\)",
+            "\\( \\frac{2}{5} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Multiplica por el recíproco de \\( \\frac{1}{2} \\) que es 2 📝",
+            "Multiplica: \\( \\frac{5}{6} \\times 2 = \\frac{10}{6} \\) ✨",
+            "Simplifica: \\( \\frac{10}{6} = \\frac{5}{3} \\) 🔢",
+            "La respuesta es \\( \\frac{5}{3} \\) o 1 \\( \\frac{2}{3} \\) 🎯"
+        ]
+    },
+    {
+        question: "¿Cuál es el resultado de \\( \\left( \\frac{4}{3} \\right)^2 \\)?",
+        options: [
+            "\\( \\frac{16}{9} \\)",
+            "\\( \\frac{8}{6} \\)",
+            "\\( \\frac{4}{9} \\)",
+            "\\( \\frac{9}{16} \\)"
+        ],
+        correctAnswer: 0,
+        hints: [
+            "Eleva el numerador: 4^2 = 16 📝",
+            "Eleva el denominador: 3^2 = 9 ✨",
+            "La respuesta es \\( \\frac{16}{9} \\) o 1 \\( \\frac{7}{9} \\) 🔢",
+            "Esa es la respuesta correcta 🎯"
+        ]
+    }
+];
+
+
+        document.getElementById('total-questions').textContent = questions.length;
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let hintIndex = 0;
+
+        function startGame() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            displayQuestion();
+        }
+
+        function shuffleOptions(question) {
+            const options = question.options.slice();
+            const correctAnswer = question.correctAnswer;
+            const optionIndices = [0, 1, 2, 3];
+
+            // Mezclar los índices de las opciones
+            for (let i = optionIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [optionIndices[i], optionIndices[j]] = [optionIndices[j], optionIndices[i]];
+            }
+
+            // Crear nuevas opciones y ajustar el índice de la respuesta correcta
+            const newOptions = [];
+            let newCorrectAnswer;
+            for (let i = 0; i < optionIndices.length; i++) {
+                newOptions.push(options[optionIndices[i]]);
+                if (optionIndices[i] === correctAnswer) {
+                    newCorrectAnswer = i;
+                }
+            }
+
+            // Actualizar las opciones y la respuesta correcta en la pregunta
+            question.options = newOptions;
+            question.correctAnswer = newCorrectAnswer;
+        }
+
+        function displayQuestion() {
+            const question = questions[currentQuestionIndex];
+
+            // Aleatorizar opciones si aún no se ha hecho
+            if (!question.optionsShuffled) {
+                shuffleOptions(question);
+                question.optionsShuffled = true;
+            }
+
+            document.getElementById('question').innerHTML = question.question;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = `
+                    <input type="radio" name="answer" id="option${index}" value="${index}">
+                    <label for="option${index}">${option}</label>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            document.getElementById('feedback').innerHTML = '';
+            hintIndex = 0;
+            
+            // Renderizar matemáticas después de actualizar el contenido
+            renderMathInElement(document.getElementById('question'), {
+                delimiters: [
+                    {left: "\\(", right: "\\)", display: false},
+                    {left: "\\[", right: "\\]", display: true}
+                ],
+                throwOnError: false
+            });
+
+            renderMathInElement(optionsContainer, {
+                delimiters: [
+                    {left: "\\(", right: "\\)", display: false},
+                    {left: "\\[", right: "\\]", display: true}
+                ],
+                throwOnError: false
+            });
+
+            updateProgress();
+        }
+
+        function checkAnswer() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            const feedbackElement = document.getElementById('feedback');
+            
+            if (!selected) {
+                feedbackElement.innerHTML = "Por favor, selecciona una respuesta 😊";
+                feedbackElement.className = 'feedback incorrect';
+                return;
+            }
+
+            const selectedAnswer = parseInt(selected.value);
+            const currentQuestion = questions[currentQuestionIndex];
+
+            if (selectedAnswer === currentQuestion.correctAnswer) {
+                score++;
+                feedbackElement.innerHTML = "¡Excelente trabajo! 🌟 ¡Lo has logrado!";
+                feedbackElement.className = 'feedback correct';
+                setTimeout(nextQuestion, 2000);
+            } else {
+                if (hintIndex < currentQuestion.hints.length) {
+                    feedbackElement.innerHTML = `
+                        <div class="hint">
+                            ${currentQuestion.hints[hintIndex]}
+                        </div>
+                    `;
+                    hintIndex++;
+                    renderMathInElement(feedbackElement, {
+                        delimiters: [
+                            {left: "\\(", right: "\\)", display: false},
+                            {left: "\\[", right: "\\]", display: true}
+                        ],
+                        throwOnError: false
+                    });
+                } else {
+                    feedbackElement.innerHTML = `No te preocupes, la respuesta correcta era: ${currentQuestion.options[currentQuestion.correctAnswer]}`;
+                    feedbackElement.className = 'feedback incorrect';
+                    renderMathInElement(feedbackElement, {
+                        delimiters: [
+                            {left: "\\(", right: "\\)", display: false},
+                            {left: "\\[", right: "\\]", display: true}
+                        ],
+                        throwOnError: false
+                    });
+                    setTimeout(nextQuestion, 3000);
+                }
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                showFinalMessage();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            document.getElementById('current-score').textContent = score;
+        }
+
+        function showFinalMessage() {
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('final-message').style.display = 'block';
+            
+            const message = score === questions.length 
+                ? "¡Increíble! ¡Has respondido todas las preguntas correctamente! 🌟"
+                : `¡Buen trabajo! Has conseguido ${score} de ${questions.length} puntos. ¡Sigue practicando! 💪`;
+            
+            document.getElementById('final-score').textContent = message;
+        }
+
+        function restartGame() {
+            // Reiniciar el estado de las preguntas
+            questions.forEach(question => {
+                delete question.optionsShuffled;
+            });
+            currentQuestionIndex = 0;
+            score = 0;
+            hintIndex = 0;
+            document.getElementById('question-container').style.display = 'block';
+            document.getElementById('final-message').style.display = 'none';
+            displayQuestion();
+        }
+
+        // No iniciamos el juego automáticamente para mostrar primero la pantalla de bienvenida
+    </script>
+</body>
+</html>
